@@ -1,18 +1,4 @@
 {
-  "buildCommand": "npx vite build",
-  "outputDirectory": ".output/public",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "framework": null,
-  "functions": {
-    "api/server.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/server"
-    }
-  ]
+  "buildCommand": "npm run build",
+  "installCommand": "npm install"
 }
