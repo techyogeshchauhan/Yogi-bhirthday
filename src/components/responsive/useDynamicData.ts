@@ -286,11 +286,15 @@ export function useQuiz(quizId: string) {
 // Hook for window size
 export function useWindowSize() {
   const [size, setSize] = useState({
-    width: typeof window !== "undefined" ? window.innerWidth : 1024,
-    height: typeof window !== "undefined" ? window.innerHeight : 768,
+    width: 1024, // Default to desktop for SSR
+    height: 768,
   });
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    setHydrated(true);
+    setSize({ width: window.innerWidth, height: window.innerHeight });
+    
     const handleResize = () => {
       setSize({ width: window.innerWidth, height: window.innerHeight });
     };
@@ -298,7 +302,7 @@ export function useWindowSize() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  return size;
+  return { ...size, hydrated };
 }
 
 // Hook for theme
@@ -330,8 +334,10 @@ export function useTheme() {
 // Hook for media query
 export function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    setHydrated(true);
     const media = window.matchMedia(query);
     setMatches(media.matches);
     const listener = (e: MediaQueryListEvent) => setMatches(e.matches);
@@ -339,7 +345,7 @@ export function useMediaQuery(query: string) {
     return () => media.removeEventListener("change", listener);
   }, [query]);
 
-  return matches;
+  return hydrated ? matches : false;
 }
 
 // Hook for lazy loading

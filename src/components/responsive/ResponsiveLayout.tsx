@@ -65,18 +65,23 @@ export function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
 
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
-  // Responsive breakpoints
-  const [width, setWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+  // Responsive breakpoints - avoid hydration mismatch
+  const [width, setWidth] = useState(1024); // Default to desktop for SSR
+  const [hydrated, setHydrated] = useState(false);
   
   useEffect(() => {
+    // Set actual width after hydration
+    setWidth(window.innerWidth);
+    setHydrated(true);
+    
     const handleResize = () => setWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const isMobile = width < 768;
-  const isTablet = width >= 768 && width < 1024;
-  const isDesktop = width >= 1024;
+  const isMobile = hydrated && width < 768;
+  const isTablet = hydrated && width >= 768 && width < 1024;
+  const isDesktop = !hydrated || width >= 1024; // Default to desktop during SSR
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -89,8 +94,8 @@ export function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
   return (
     <ResponsiveContext.Provider value={{ isMobile, isTablet, isDesktop, sidebarOpen, setSidebarOpen, darkMode, toggleDarkMode }}>
       <div className="min-h-screen aurora-bg">
-        {/* Mobile Navigation Header */}
-        {isMobile && (
+        {/* Mobile Navigation Header - Only show after hydration */}
+        {hydrated && isMobile && (
           <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/10 backdrop-blur-xl">
             <div className="flex items-center justify-between px-4 py-3">
               <button
@@ -112,7 +117,7 @@ export function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
           </header>
         )}
 
-        {/* Desktop Sidebar */}
+        {/* Desktop Sidebar - Show by default for SSR */}
         {isDesktop && (
           <aside className="fixed left-0 top-0 bottom-0 w-64 z-40 glass border-r border-white/10 backdrop-blur-xl">
             <div className="flex flex-col h-full">
@@ -201,8 +206,8 @@ export function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
           )}
         </AnimatePresence>
 
-        {/* Tablet Mini Sidebar */}
-        {isTablet && (
+        {/* Tablet Mini Sidebar - Only show after hydration */}
+        {hydrated && isTablet && (
           <aside className="fixed left-0 top-0 bottom-0 w-20 z-40 glass border-r border-white/10 backdrop-blur-xl">
             <div className="flex flex-col h-full items-center py-6 gap-4">
               {navItems.slice(0, 8).map((item) => {
@@ -234,16 +239,16 @@ export function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
 
         {/* Main Content */}
         <main className={`
-          ${isMobile ? "pt-16" : ""}
+          ${hydrated && isMobile ? "pt-16" : ""}
           ${isDesktop ? "ml-64" : ""}
-          ${isTablet ? "ml-20" : ""}
+          ${hydrated && isTablet ? "ml-20" : ""}
           transition-all duration-300
         `}>
           {children}
         </main>
 
-        {/* Mobile Floating Navigation */}
-        {isMobile && (
+        {/* Mobile Floating Navigation - Only show after hydration */}
+        {hydrated && isMobile && (
           <nav className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-white/10 backdrop-blur-xl">
             <div className="flex items-center justify-around py-2 px-4">
               <Link to="/" className="flex flex-col items-center gap-1 p-2">

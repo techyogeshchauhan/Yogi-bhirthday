@@ -29,8 +29,8 @@ interface Stats {
 
 export function AdminDashboard() {
   const navigate = useNavigate();
-  const { width } = useWindowSize();
-  const isMobile = width < 768;
+  const { width, hydrated } = useWindowSize();
+  const isMobile = hydrated && width < 768;
   
   const [ok, setOk] = useState(false);
   const [pw, setPw] = useState("");

@@ -1871,7 +1871,7 @@ function Timeline() {
 var achievementsData = [
 	{
 		label: "Research Papers",
-		value: "12+",
+		value: "02",
 		icon: BookOpen
 	},
 	{

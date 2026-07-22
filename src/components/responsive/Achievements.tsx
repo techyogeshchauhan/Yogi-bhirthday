@@ -9,7 +9,7 @@ interface Achievement {
 }
 
 const achievementsData: Achievement[] = [
-  { label: "Research Papers", value: "12+", icon: BookOpen },
+  { label: "Research Papers", value: "02", icon: BookOpen },
   { label: "Projects Shipped", value: "40+", icon: Rocket },
   { label: "Certificates", value: "20", icon: Award },
   { label: "Awards", value: "6", icon: Trophy },

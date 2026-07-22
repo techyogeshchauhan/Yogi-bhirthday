@@ -26,6 +26,7 @@ export { Timeline } from "./Timeline";
 export { Achievements } from "./Achievements";
 export { Gallery } from "./Gallery";
 export { InteractiveCake } from "./InteractiveCake";
+export { InteractiveBirthdayCake } from "./InteractiveBirthdayCake";
 
 // Interactive Components
 export { GuestBook } from "./GuestBook";
@@ -34,6 +35,9 @@ export { AIWishGenerator } from "./AIWishGenerator";
 export { MemoryCapsule } from "./MemoryCapsule";
 export { Poll } from "./Poll";
 export { Quiz } from "./Quiz";
+export { PhotoBooth } from "./PhotoBooth";
+export { VirtualGiftBox } from "./VirtualGiftBox";
+export { VideoMessages } from "./VideoMessages";
 
 // Utility Components
 export { Gifts } from "./Gifts";

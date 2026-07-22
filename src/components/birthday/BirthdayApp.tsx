@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Toaster } from "sonner";
 
 // Responsive Layout and Core Components
@@ -12,6 +12,7 @@ import {
   Achievements,
   Gallery,
   InteractiveCake,
+  InteractiveBirthdayCake,
   GuestBook,
   FriendWall,
   AIWishGenerator,
@@ -22,7 +23,10 @@ import {
   SocialLinks,
   FloatingWidgets,
   VisitorCounter,
-  BirthdayReveal
+  BirthdayReveal,
+  PhotoBooth,
+  VirtualGiftBox,
+  VideoMessages
 } from "../responsive";
 
 // Re-export BirthdayReveal from CountdownTimer
@@ -30,6 +34,11 @@ import {
 function BirthdayAppContent() {
   const [showReveal, setShowReveal] = useState(false);
   const { isMobile } = useResponsive();
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   // Check if birthday has passed
   useEffect(() => {
@@ -72,6 +81,18 @@ function BirthdayAppContent() {
       {/* Interactive Cake */}
       <InteractiveCake />
       
+      {/* Interactive Birthday Cake */}
+      <InteractiveBirthdayCake />
+      
+      {/* Photo Booth */}
+      <PhotoBooth />
+      
+      {/* Virtual Gift Box */}
+      <VirtualGiftBox />
+      
+      {/* Video Messages */}
+      <VideoMessages />
+      
       {/* Guest Book - Wishes */}
       <GuestBook />
       
@@ -100,7 +121,7 @@ function BirthdayAppContent() {
       <SocialLinks />
       
       {/* Floating Widgets (Desktop only) */}
-      {!isMobile && <FloatingWidgets />}
+      {hydrated && !isMobile && <FloatingWidgets />}
       
       {/* Birthday Reveal Modal */}
       {showReveal && (
@@ -114,6 +135,8 @@ function BirthdayAppContent() {
     </>
   );
 }
+
+
 
 export default function BirthdayApp() {
   return (
