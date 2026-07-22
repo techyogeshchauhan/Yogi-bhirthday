@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_wishes: {
+        Row: {
+          approved: boolean
+          created_at: string
+          id: string
+          likes: number
+          name: string
+          tone: string | null
+          wish_text: string
+        }
+        Insert: {
+          approved?: boolean
+          created_at?: string
+          id?: string
+          likes?: number
+          name: string
+          tone?: string | null
+          wish_text: string
+        }
+        Update: {
+          approved?: boolean
+          created_at?: string
+          id?: string
+          likes?: number
+          name?: string
+          tone?: string | null
+          wish_text?: string
+        }
+        Relationships: []
+      }
       capsule: {
         Row: {
           created_at: string
@@ -62,6 +92,123 @@ export type Database = {
           memory?: string
           name?: string
           photo_url?: string | null
+        }
+        Relationships: []
+      }
+      photo_booth: {
+        Row: {
+          approved: boolean
+          created_at: string
+          filter_applied: string | null
+          id: string
+          likes: number
+          name: string | null
+          photo_url: string
+        }
+        Insert: {
+          approved?: boolean
+          created_at?: string
+          filter_applied?: string | null
+          id?: string
+          likes?: number
+          name?: string | null
+          photo_url: string
+        }
+        Update: {
+          approved?: boolean
+          created_at?: string
+          filter_applied?: string | null
+          id?: string
+          likes?: number
+          name?: string | null
+          photo_url?: string
+        }
+        Relationships: []
+      }
+      poll_responses: {
+        Row: {
+          created_at: string
+          id: string
+          option_id: string
+          poll_id: string
+          user_identifier: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_id: string
+          poll_id: string
+          user_identifier?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_id?: string
+          poll_id?: string
+          user_identifier?: string | null
+        }
+        Relationships: []
+      }
+      quiz_responses: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          percentage: number | null
+          score: number
+          time_taken: number | null
+          total_questions: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          percentage?: number | null
+          score: number
+          time_taken?: number | null
+          total_questions: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          percentage?: number | null
+          score?: number
+          time_taken?: number | null
+          total_questions?: number
+        }
+        Relationships: []
+      }
+      video_messages: {
+        Row: {
+          approved: boolean
+          created_at: string
+          duration: number | null
+          id: string
+          likes: number
+          name: string
+          thumbnail_url: string | null
+          video_url: string
+        }
+        Insert: {
+          approved?: boolean
+          created_at?: string
+          duration?: number | null
+          id?: string
+          likes?: number
+          name: string
+          thumbnail_url?: string | null
+          video_url: string
+        }
+        Update: {
+          approved?: boolean
+          created_at?: string
+          duration?: number | null
+          id?: string
+          likes?: number
+          name?: string
+          thumbnail_url?: string | null
+          video_url?: string
         }
         Relationships: []
       }
@@ -130,6 +277,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_poll_stats: {
+        Args: { _poll_id: string }
+        Returns: {
+          option_id: string
+          vote_count: number
+        }[]
+      }
       get_visitor_stats: {
         Args: never
         Returns: {
@@ -137,6 +291,9 @@ export type Database = {
           total: number
         }[]
       }
+      increment_ai_wish_likes: { Args: { _wish_id: string }; Returns: number }
+      increment_photo_likes: { Args: { _photo_id: string }; Returns: number }
+      increment_video_likes: { Args: { _video_id: string }; Returns: number }
       increment_wish_likes: { Args: { _wish_id: string }; Returns: number }
     }
     Enums: {
