@@ -26,7 +26,18 @@ import {
   BirthdayReveal,
   PhotoBooth,
   VirtualGiftBox,
-  VideoMessages
+  VideoMessages,
+  MusicPlayer,
+  // New Interactive Modules
+  BalloonPop,
+  ScratchCard,
+  StarMap,
+  FortuneCookie,
+  ToastWall,
+  BirthdayLetter,
+  WordCloud,
+  FireworksLauncher,
+  PersonalityQuiz,
 } from "../responsive";
 
 // Re-export BirthdayReveal from CountdownTimer
@@ -59,6 +70,9 @@ function BirthdayAppContent() {
   return (
     <>
       <Toaster position="top-center" richColors />
+
+      {/* Background Music Player */}
+      <MusicPlayer />
       
       {/* Background Effects */}
       <BackgroundEffects />
@@ -98,12 +112,39 @@ function BirthdayAppContent() {
       
       {/* Friend Wall */}
       <FriendWall />
+
+      {/* Virtual Toast Wall */}
+      <ToastWall />
+
+      {/* Word Cloud */}
+      <WordCloud />
       
       {/* AI Wish Generator */}
       <AIWishGenerator />
       
       {/* Memory Capsule */}
       <MemoryCapsule />
+
+      {/* Birthday Letter */}
+      <BirthdayLetter />
+
+      {/* Fortune Cookie */}
+      <FortuneCookie />
+
+      {/* Balloon Pop */}
+      <BalloonPop />
+
+      {/* Scratch Card */}
+      <ScratchCard />
+
+      {/* Star Map */}
+      <StarMap />
+
+      {/* Fireworks Launcher */}
+      <FireworksLauncher />
+
+      {/* Personality Quiz */}
+      <PersonalityQuiz />
       
       {/* Poll */}
       <Poll />

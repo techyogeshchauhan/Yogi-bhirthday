@@ -44,6 +44,18 @@ export { Gifts } from "./Gifts";
 export { SocialLinks } from "./SocialLinks";
 export { FloatingWidgets } from "./FloatingWidgets";
 export { VisitorCounter } from "./VisitorCounter";
+export { MusicPlayer } from "./MusicPlayer";
+
+// New Interactive Modules
+export { BalloonPop } from "./BalloonPop";
+export { ScratchCard } from "./ScratchCard";
+export { StarMap } from "./StarMap";
+export { FortuneCookie } from "./FortuneCookie";
+export { ToastWall } from "./ToastWall";
+export { BirthdayLetter } from "./BirthdayLetter";
+export { WordCloud } from "./WordCloud";
+export { FireworksLauncher } from "./FireworksLauncher";
+export { PersonalityQuiz } from "./PersonalityQuiz";
 
 // Hooks
 export { 
