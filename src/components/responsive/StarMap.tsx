@@ -119,10 +119,11 @@ export function StarMap() {
                 <motion.circle
                   cx={planet.x}
                   cy={planet.y}
-                  r={planet.size * 0.6}
+                  r={planet.size * 0.65}
                   fill={planet.glow}
-                  animate={{ r: [planet.size * 0.55, planet.size * 0.75, planet.size * 0.55], opacity: [0.3, 0.6, 0.3] }}
+                  animate={{ scale: [0.85, 1.15, 0.85], opacity: [0.3, 0.6, 0.3] }}
                   transition={{ repeat: Infinity, duration: 3 }}
+                  style={{ transformOrigin: `${planet.x}px ${planet.y}px` }}
                 />
                 <circle cx={planet.x} cy={planet.y} r={planet.size * 0.35} fill={planet.color} />
                 <text
@@ -168,15 +169,14 @@ export function StarMap() {
                     <motion.circle
                       cx={star.x}
                       cy={star.y}
-                      r={star.size * 0.4}
+                      r={selected === constellation.name ? star.size * 0.5 : star.size * 0.4}
                       fill={constellation.color}
                       animate={{
-                        r: selected === constellation.name
-                          ? [star.size * 0.4, star.size * 0.6, star.size * 0.4]
-                          : [star.size * 0.35, star.size * 0.45, star.size * 0.35],
+                        scale: selected === constellation.name ? [1, 1.3, 1] : [0.9, 1.1, 0.9],
                         opacity: [star.brightness * 0.7, star.brightness, star.brightness * 0.7],
                       }}
                       transition={{ repeat: Infinity, duration: 1.5 + si * 0.2 }}
+                      style={{ transformOrigin: `${star.x}px ${star.y}px` }}
                     />
                   </g>
                 ))}
@@ -201,14 +201,16 @@ export function StarMap() {
               <motion.circle
                 cx="50" cy="50" r="1.5"
                 fill="#ffd700"
-                animate={{ r: [1.5, 2.5, 1.5], opacity: [0.8, 1, 0.8] }}
+                animate={{ scale: [1, 1.67, 1], opacity: [0.8, 1, 0.8] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
+                style={{ transformOrigin: "50px 50px" }}
               />
               <motion.circle
                 cx="50" cy="50" r="3"
                 fill="#ffd700"
-                animate={{ r: [3, 5, 3], opacity: [0.3, 0, 0.3] }}
+                animate={{ scale: [1, 1.67, 1], opacity: [0.3, 0, 0.3] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
+                style={{ transformOrigin: "50px 50px" }}
               />
               <text x="50" y="55.5" textAnchor="middle" fill="#ffd700" fontSize="2.2" fontFamily="sans-serif" fontWeight="bold">
                 ★ Yogesh's Star

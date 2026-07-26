@@ -35,11 +35,12 @@ export function MusicPlayer() {
     const initPlayer = () => {
       if (window.YT && window.YT.Player && containerRef.current) {
         playerRef.current = new window.YT.Player("yt-music-player-iframe", {
-          height: "1",
-          width: "1",
+          height: "113",
+          width: "200",
           videoId: YOUTUBE_VIDEO_ID,
           playerVars: {
             autoplay: 1,
+            mute: 1,          // Start muted to bypass autoplay policy
             start: START_TIME,
             loop: 1,
             playlist: YOUTUBE_VIDEO_ID,
@@ -50,19 +51,26 @@ export function MusicPlayer() {
             rel: 0,
             showinfo: 0,
             iv_load_policy: 3,
+            origin: window.location.origin,  // Fix postMessage origin mismatch
           },
           events: {
             onReady: (event: any) => {
               setPlayerReady(true);
-              event.target.setVolume(volume);
               event.target.playVideo();
-              setIsPlaying(true);
+              // Unmute and set volume after a short delay (bypass autoplay policy)
+              setTimeout(() => {
+                event.target.unMute();
+                event.target.setVolume(volume);
+                setIsPlaying(true);
+              }, 500);
             },
             onStateChange: (event: any) => {
               if (event.data === window.YT.PlayerState.PLAYING) {
                 setIsPlaying(true);
               } else if (event.data === window.YT.PlayerState.PAUSED) {
                 setIsPlaying(false);
+              } else if (event.data === window.YT.PlayerState.ENDED) {
+                event.target.playVideo(); // Manual loop fallback
               }
             },
           },
@@ -126,20 +134,21 @@ export function MusicPlayer() {
 
   return (
     <>
-      {/* Hidden YouTube player container */}
+      {/* Hidden YouTube player — off-screen, proper size for YouTube API */}
       <div
-        ref={containerRef}
         style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
+          position: "fixed",
+          top: "-9999px",
+          left: "-9999px",
+          width: "200px",
+          height: "113px",
           overflow: "hidden",
-          opacity: 0,
           pointerEvents: "none",
+          zIndex: -1,
         }}
         aria-hidden="true"
       >
-        <div id="yt-music-player-iframe" />
+        <div id="yt-music-player-iframe" ref={containerRef} />
       </div>
 
       {/* Floating Music Player UI */}
