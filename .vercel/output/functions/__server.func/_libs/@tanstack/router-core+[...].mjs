@@ -1,325 +1,4 @@
-//#region node_modules/cookie-es/dist/index.mjs
-function splitSetCookieString(cookiesString) {
-	if (Array.isArray(cookiesString)) return cookiesString.flatMap((c) => splitSetCookieString(c));
-	if (typeof cookiesString !== "string") return [];
-	const cookiesStrings = [];
-	let pos = 0;
-	let start;
-	let ch;
-	let lastComma;
-	let nextStart;
-	let cookiesSeparatorFound;
-	const skipWhitespace = () => {
-		while (pos < cookiesString.length && /\s/.test(cookiesString.charAt(pos))) pos += 1;
-		return pos < cookiesString.length;
-	};
-	const notSpecialChar = () => {
-		ch = cookiesString.charAt(pos);
-		return ch !== "=" && ch !== ";" && ch !== ",";
-	};
-	while (pos < cookiesString.length) {
-		start = pos;
-		cookiesSeparatorFound = false;
-		while (skipWhitespace()) {
-			ch = cookiesString.charAt(pos);
-			if (ch === ",") {
-				lastComma = pos;
-				pos += 1;
-				skipWhitespace();
-				nextStart = pos;
-				while (pos < cookiesString.length && notSpecialChar()) pos += 1;
-				if (pos < cookiesString.length && cookiesString.charAt(pos) === "=") {
-					cookiesSeparatorFound = true;
-					pos = nextStart;
-					cookiesStrings.push(cookiesString.slice(start, lastComma));
-					start = pos;
-				} else pos = lastComma + 1;
-			} else pos += 1;
-		}
-		if (!cookiesSeparatorFound || pos >= cookiesString.length) cookiesStrings.push(cookiesString.slice(start));
-	}
-	return cookiesStrings;
-}
-//#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/ssr/headers.js
-function toHeadersInstance(init) {
-	if (init instanceof Headers) return init;
-	else if (Array.isArray(init)) return new Headers(init);
-	else if (typeof init === "object") return new Headers(init);
-	else return null;
-}
-function mergeHeaders(...headers) {
-	return headers.reduce((acc, header) => {
-		const headersInstance = toHeadersInstance(header);
-		if (!headersInstance) return acc;
-		for (const [key, value] of headersInstance.entries()) if (key === "set-cookie") splitSetCookieString(value).forEach((cookie) => acc.append("set-cookie", cookie));
-		else acc.set(key, value);
-		return acc;
-	}, new Headers());
-}
-//#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/utils.js
-/**
-* Re-encode characters that are unsafe in URL paths.
-* Includes ASCII control characters (0x00-0x1F, 0x7F) and a subset of the
-* WHATWG URL "path percent-encode set" (", <, >, `, {, }).
-*
-* Space (0x20) is intentionally excluded — decodeURI decodes %20 to space
-* and the router stores decoded spaces in location.pathname. The existing
-* encodePathLikeUrl already handles re-encoding spaces for outgoing URLs.
-*
-* These characters are decoded by decodeURI but must remain percent-encoded
-* in paths to match how upstream layers (CDNs, edge middleware, browsers)
-* interpret the URL, preventing infinite redirect loops and path mismatches.
-*/
-var PATH_UNSAFE_RE = /[\x00-\x1f\x7f"<>`{}]/g;
-function sanitizePathSegment(segment) {
-	return segment.replace(PATH_UNSAFE_RE, (ch) => "%" + ch.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0"));
-}
-function decodeSegment(segment) {
-	let decoded;
-	try {
-		decoded = decodeURI(segment);
-	} catch {
-		decoded = segment.replaceAll(/%[0-9A-F]{2}/gi, (match) => {
-			try {
-				return decodeURI(match);
-			} catch {
-				return match;
-			}
-		});
-	}
-	return sanitizePathSegment(decoded);
-}
-function decodePath(path) {
-	if (!path) return {
-		path,
-		handledProtocolRelativeURL: false
-	};
-	if (!/[%\\\x00-\x1f\x7f]/.test(path) && !path.startsWith("//")) return {
-		path,
-		handledProtocolRelativeURL: false
-	};
-	const re = /%25|%5C/gi;
-	let cursor = 0;
-	let result = "";
-	let match;
-	while (null !== (match = re.exec(path))) {
-		result += decodeSegment(path.slice(cursor, match.index)) + match[0];
-		cursor = re.lastIndex;
-	}
-	result = result + decodeSegment(cursor ? path.slice(cursor) : path);
-	let handledProtocolRelativeURL = false;
-	if (result.startsWith("//")) {
-		handledProtocolRelativeURL = true;
-		result = "/" + result.replace(/^\/+/, "");
-	}
-	return {
-		path: result,
-		handledProtocolRelativeURL
-	};
-}
-//#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/invariant.js
-function invariant() {
-	throw new Error("Invariant failed");
-}
-//#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/not-found.js
-/** Determine if a value is a TanStack Router not-found error. */
-function isNotFound(obj) {
-	return obj?.isNotFound === true;
-}
-//#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/ssr/ssr-match-id.js
-function dehydrateSsrMatchId(id) {
-	return id.replaceAll("/", "\0");
-}
-//#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/lru-cache.js
-function createLRUCache(max) {
-	const cache = /* @__PURE__ */ new Map();
-	let oldest;
-	let newest;
-	const touch = (entry) => {
-		if (!entry.next) return;
-		if (!entry.prev) {
-			entry.next.prev = void 0;
-			oldest = entry.next;
-			entry.next = void 0;
-			if (newest) {
-				entry.prev = newest;
-				newest.next = entry;
-			}
-		} else {
-			entry.prev.next = entry.next;
-			entry.next.prev = entry.prev;
-			entry.next = void 0;
-			if (newest) {
-				newest.next = entry;
-				entry.prev = newest;
-			}
-		}
-		newest = entry;
-	};
-	return {
-		get(key) {
-			const entry = cache.get(key);
-			if (!entry) return void 0;
-			touch(entry);
-			return entry.value;
-		},
-		set(key, value) {
-			if (cache.size >= max && oldest) {
-				const toDelete = oldest;
-				cache.delete(toDelete.key);
-				if (toDelete.next) {
-					oldest = toDelete.next;
-					toDelete.next.prev = void 0;
-				}
-				if (toDelete === newest) newest = void 0;
-			}
-			const existing = cache.get(key);
-			if (existing) {
-				existing.value = value;
-				touch(existing);
-			} else {
-				const entry = {
-					key,
-					value,
-					prev: newest
-				};
-				if (newest) newest.next = entry;
-				newest = entry;
-				if (!oldest) oldest = entry;
-				cache.set(key, entry);
-			}
-		},
-		clear() {
-			cache.clear();
-			oldest = void 0;
-			newest = void 0;
-		}
-	};
-}
-//#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/root.js
-/** Stable identifier used for the root route in a route tree. */
-var rootRouteId = "__root__";
-//#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/redirect.js
-/**
-* Create a redirect Response understood by TanStack Router.
-*
-* Use from route `loader`/`beforeLoad` or server functions to trigger a
-* navigation. If `throw: true` is set, the redirect is thrown instead of
-* returned. When an absolute `href` is supplied and `reloadDocument` is not
-* set, a full-document navigation is inferred.
-*
-* @param opts Options for the redirect. Common fields:
-* - `href`: absolute URL for external redirects; infers `reloadDocument`.
-* - `statusCode`: HTTP status code to use (defaults to 307).
-* - `headers`: additional headers to include on the Response.
-* - Standard navigation options like `to`, `params`, `search`, `replace`,
-*   and `reloadDocument` for internal redirects.
-* @returns A Response augmented with router navigation options.
-* @link https://tanstack.com/router/latest/docs/framework/react/api/router/redirectFunction
-*/
-function redirect(opts) {
-	opts.statusCode = opts.statusCode || opts.code || 307;
-	if (!opts._builtLocation && !opts.reloadDocument && typeof opts.href === "string") try {
-		new URL(opts.href);
-		opts.reloadDocument = true;
-	} catch {}
-	const headers = new Headers(opts.headers);
-	if (opts.href && headers.get("Location") === null) headers.set("Location", opts.href);
-	const response = new Response(null, {
-		status: opts.statusCode,
-		headers
-	});
-	response.options = opts;
-	if (opts.throw) throw response;
-	return response;
-}
-/** Check whether a value is a TanStack Router redirect Response. */
-/** Check whether a value is a TanStack Router redirect Response. */
-function isRedirect(obj) {
-	return obj instanceof Response && !!obj.options;
-}
-/** True if value is a redirect with a resolved `href` location. */
-/** True if value is a redirect with a resolved `href` location. */
-function isResolvedRedirect(obj) {
-	return isRedirect(obj) && !!obj.options.href;
-}
-/** Parse a serialized redirect object back into a redirect Response. */
-/** Parse a serialized redirect object back into a redirect Response. */
-function parseRedirect(obj) {
-	if (obj !== null && typeof obj === "object" && obj.isSerializedRedirect) return redirect(obj);
-}
-//#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/rewrite.js
-/** Execute a location input rewrite if provided. */
-function executeRewriteInput(rewrite, url) {
-	const res = rewrite?.input?.({ url });
-	if (res) {
-		if (typeof res === "string") return new URL(res);
-		else if (res instanceof URL) return res;
-	}
-	return url;
-}
-//#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/manifest.js
-function getAssetCrossOrigin(assetCrossOrigin, kind) {
-	if (!assetCrossOrigin) return;
-	if (typeof assetCrossOrigin === "string") return assetCrossOrigin;
-	return assetCrossOrigin[kind];
-}
-function getManifestScriptFormat(manifest) {
-	return manifest?.scriptFormat ?? "module";
-}
-function getScriptPreloadAttrs(manifest, link, assetCrossOrigin) {
-	const preloadLink = resolveManifestAssetLink(link);
-	const crossOrigin = getAssetCrossOrigin(assetCrossOrigin, "script") ?? preloadLink.crossOrigin;
-	return {
-		...getManifestScriptFormat(manifest) === "iife" ? {
-			rel: "preload",
-			as: "script"
-		} : { rel: "modulepreload" },
-		href: preloadLink.href,
-		...crossOrigin ? { crossOrigin } : {}
-	};
-}
-function resolveManifestAssetLink(link) {
-	if (typeof link === "string") return {
-		href: link,
-		crossOrigin: void 0
-	};
-	return link;
-}
-function getStylesheetHref(asset) {
-	return resolveManifestCssLink(asset).href;
-}
-function resolveManifestCssLink(link) {
-	if (typeof link === "string") return {
-		href: link,
-		crossOrigin: void 0
-	};
-	return link;
-}
-function createInlineCssStyleAsset(css) {
-	return {
-		attrs: { suppressHydrationWarning: true },
-		children: css
-	};
-}
-function createInlineCssPlaceholderAsset() {
-	return { attrs: { suppressHydrationWarning: true } };
-}
-//#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/ssr/constants.js
-var GLOBAL_TSR = "$_TSR";
-var TSR_SCRIPT_BARRIER_ID = "$tsr-stream-barrier";
-//#endregion
+import { A as rootRouteId, C as getStylesheetHref, M as createLRUCache, N as invariant, P as decodePath, b as createInlineCssPlaceholderAsset, v as GLOBAL_TSR, x as createInlineCssStyleAsset, y as TSR_SCRIPT_BARRIER_ID } from "./react-router+[...].mjs";
 //#region node_modules/seroval/dist/esm/production/index.mjs
 var L = ((i) => (i[i.AggregateError = 1] = "AggregateError", i[i.ArrowFunction = 2] = "ArrowFunction", i[i.ErrorPrototypeStack = 4] = "ErrorPrototypeStack", i[i.ObjectAssign = 8] = "ObjectAssign", i[i.BigIntTypedArray = 16] = "BigIntTypedArray", i[i.RegExp = 32] = "RegExp", i))(L || {});
 var v$1 = Symbol.asyncIterator;
@@ -2785,6 +2464,71 @@ var defaultSerovalPlugins = [
 	})
 ];
 //#endregion
+//#region node_modules/cookie-es/dist/index.mjs
+function splitSetCookieString(cookiesString) {
+	if (Array.isArray(cookiesString)) return cookiesString.flatMap((c) => splitSetCookieString(c));
+	if (typeof cookiesString !== "string") return [];
+	const cookiesStrings = [];
+	let pos = 0;
+	let start;
+	let ch;
+	let lastComma;
+	let nextStart;
+	let cookiesSeparatorFound;
+	const skipWhitespace = () => {
+		while (pos < cookiesString.length && /\s/.test(cookiesString.charAt(pos))) pos += 1;
+		return pos < cookiesString.length;
+	};
+	const notSpecialChar = () => {
+		ch = cookiesString.charAt(pos);
+		return ch !== "=" && ch !== ";" && ch !== ",";
+	};
+	while (pos < cookiesString.length) {
+		start = pos;
+		cookiesSeparatorFound = false;
+		while (skipWhitespace()) {
+			ch = cookiesString.charAt(pos);
+			if (ch === ",") {
+				lastComma = pos;
+				pos += 1;
+				skipWhitespace();
+				nextStart = pos;
+				while (pos < cookiesString.length && notSpecialChar()) pos += 1;
+				if (pos < cookiesString.length && cookiesString.charAt(pos) === "=") {
+					cookiesSeparatorFound = true;
+					pos = nextStart;
+					cookiesStrings.push(cookiesString.slice(start, lastComma));
+					start = pos;
+				} else pos = lastComma + 1;
+			} else pos += 1;
+		}
+		if (!cookiesSeparatorFound || pos >= cookiesString.length) cookiesStrings.push(cookiesString.slice(start));
+	}
+	return cookiesStrings;
+}
+//#endregion
+//#region node_modules/@tanstack/router-core/dist/esm/ssr/headers.js
+function toHeadersInstance(init) {
+	if (init instanceof Headers) return init;
+	else if (Array.isArray(init)) return new Headers(init);
+	else if (typeof init === "object") return new Headers(init);
+	else return null;
+}
+function mergeHeaders(...headers) {
+	return headers.reduce((acc, header) => {
+		const headersInstance = toHeadersInstance(header);
+		if (!headersInstance) return acc;
+		for (const [key, value] of headersInstance.entries()) if (key === "set-cookie") splitSetCookieString(value).forEach((cookie) => acc.append("set-cookie", cookie));
+		else acc.set(key, value);
+		return acc;
+	}, new Headers());
+}
+//#endregion
+//#region node_modules/@tanstack/router-core/dist/esm/ssr/ssr-match-id.js
+function dehydrateSsrMatchId(id) {
+	return id.replaceAll("/", "\0");
+}
+//#endregion
 //#region node_modules/@tanstack/router-core/dist/esm/ssr/tsrScript.js
 var tsrScript_default = "self.$_TSR={h(){this.hydrated=!0,this.c()},e(){this.streamEnded=!0,this.c()},c(){this.hydrated&&this.streamEnded&&(delete self.$_TSR,delete self.$R.tsr)},p(e){this.initialized?e():this.buffer.push(e)},buffer:[]}";
 //#endregion
@@ -3267,31 +3011,4 @@ function getNormalizedURL(url, base) {
 	};
 }
 //#endregion
-//#region node_modules/@tanstack/router-core/dist/esm/ssr/handlerCallback.js
-function isSsrResponse(value) {
-	return typeof value === "object" && value !== null && "response" in value && "serverSsrCleanup" in value;
-}
-function normalizeSsrResponse(result) {
-	return isSsrResponse(result) ? result : {
-		response: result,
-		serverSsrCleanup: "none"
-	};
-}
-async function replaceSsrResponse(result, response, reason) {
-	const ssrResponse = normalizeSsrResponse(result);
-	if (ssrResponse.serverSsrCleanup === "stream") await ssrResponse.dispose(reason);
-	return {
-		response,
-		serverSsrCleanup: "none"
-	};
-}
-async function stripSsrResponseBody(result, reason) {
-	const ssrResponse = normalizeSsrResponse(result);
-	if (ssrResponse.serverSsrCleanup === "stream") await ssrResponse.dispose(reason);
-	return {
-		response: new Response(null, ssrResponse.response),
-		serverSsrCleanup: "none"
-	};
-}
-//#endregion
-export { rootRouteId as C, mergeHeaders as E, parseRedirect as S, invariant as T, resolveManifestAssetLink as _, attachRouterServerSsrUtils as a, isRedirect as b, defaultSerovalPlugins as c, makeSerovalPlugin as d, Ou as f, getStylesheetHref as g, getScriptPreloadAttrs as h, stripSsrResponseBody as i, createRawStreamRPCPlugin as l, lu as m, normalizeSsrResponse as n, getNormalizedURL as o, cu as p, replaceSsrResponse as r, getOrigin as s, isSsrResponse as t, createSerializationAdapter as u, resolveManifestCssLink as v, isNotFound as w, isResolvedRedirect as x, executeRewriteInput as y };
+export { defaultSerovalPlugins as a, makeSerovalPlugin as c, lu as d, mergeHeaders as i, Ou as l, getNormalizedURL as n, createRawStreamRPCPlugin as o, getOrigin as r, createSerializationAdapter as s, attachRouterServerSsrUtils as t, cu as u };

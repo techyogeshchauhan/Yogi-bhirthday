@@ -1,12 +1,17 @@
-import { a as __require, n as __commonJSMin, s as __toESM } from "../../__23tanstack-start-server-fn-resolver-Bg9DSdsn.mjs";
-import { n as parseHref } from "../tanstack__history.mjs";
+import { i as __require, o as __toESM, t as __commonJSMin } from "../../_runtime.mjs";
 import { n as require_react } from "../@radix-ui/react-compose-refs+[...].mjs";
+import { r as parseHref } from "../tanstack__history.mjs";
 import { n as require_jsx_runtime } from "../radix-ui__react-context+react.mjs";
 import { c as require_react_dom } from "../@radix-ui/react-dialog+[...].mjs";
 import { PassThrough, Readable } from "node:stream";
 import { ReadableStream as ReadableStream$1 } from "node:stream/web";
 //#region node_modules/@tanstack/react-router/dist/esm/utils.js
 var import_react = /* @__PURE__ */ __toESM(require_react(), 1);
+/**
+* React.use if available (React 19+), undefined otherwise.
+* Use dynamic lookup to avoid Webpack compilation errors with React 18.
+*/
+var reactUse = import_react.use;
 typeof window !== "undefined" ? import_react.useLayoutEffect : import_react.useEffect;
 /**
 * React hook to wrap `IntersectionObserver`.
@@ -171,6 +176,14 @@ function createControlledPromise(onResolve) {
 		rejectLoadPromise(e);
 	};
 	return controlledPromise;
+}
+/**
+* Heuristically detect dynamic import "module not found" errors
+* across major browsers for lazy route component handling.
+*/
+function isModuleNotFoundError(error) {
+	if (typeof error?.message !== "string") return false;
+	return error.message.startsWith("Failed to fetch dynamically imported module") || error.message.startsWith("error loading dynamically imported module") || error.message.startsWith("Importing a module script failed");
 }
 function isPromise(value) {
 	return Boolean(value && typeof value === "object" && typeof value.then === "function");
@@ -1527,6 +1540,16 @@ function redirect(opts) {
 /** Check whether a value is a TanStack Router redirect Response. */
 function isRedirect(obj) {
 	return obj instanceof Response && !!obj.options;
+}
+/** True if value is a redirect with a resolved `href` location. */
+/** True if value is a redirect with a resolved `href` location. */
+function isResolvedRedirect(obj) {
+	return isRedirect(obj) && !!obj.options.href;
+}
+/** Parse a serialized redirect object back into a redirect Response. */
+/** Parse a serialized redirect object back into a redirect Response. */
+function parseRedirect(obj) {
+	if (obj !== null && typeof obj === "object" && obj.isSerializedRedirect) return redirect(obj);
 }
 //#endregion
 //#region node_modules/@tanstack/router-core/dist/esm/rewrite.js
@@ -3512,12 +3535,24 @@ function appendUniqueUserTags(target, tags) {
 		target.push(tag);
 	}
 }
+function getStylesheetHref(asset) {
+	return resolveManifestCssLink(asset).href;
+}
 function resolveManifestCssLink(link) {
 	if (typeof link === "string") return {
 		href: link,
 		crossOrigin: void 0
 	};
 	return link;
+}
+function createInlineCssStyleAsset(css) {
+	return {
+		attrs: { suppressHydrationWarning: true },
+		children: css
+	};
+}
+function createInlineCssPlaceholderAsset() {
+	return { attrs: { suppressHydrationWarning: true } };
 }
 //#endregion
 //#region node_modules/@tanstack/router-core/dist/esm/route.js
@@ -3591,6 +3626,10 @@ var BaseRootRoute = class extends BaseRoute {
 		super(options);
 	}
 };
+//#endregion
+//#region node_modules/@tanstack/router-core/dist/esm/ssr/constants.js
+var GLOBAL_TSR = "$_TSR";
+var TSR_SCRIPT_BARRIER_ID = "$tsr-stream-barrier";
 //#endregion
 //#region node_modules/@tanstack/react-router/dist/esm/CatchBoundary.js
 var import_jsx_runtime = require_jsx_runtime();
@@ -4879,6 +4918,53 @@ var FileRoute = class {
 		this.silent = _opts?.silent;
 	}
 };
+//#endregion
+//#region node_modules/@tanstack/react-router/dist/esm/lazyRouteComponent.js
+/**
+* Wrap a dynamic import to create a route component that supports
+* `.preload()` and friendly reload-on-module-missing behavior.
+*
+* @param importer Function returning a module promise
+* @param exportName Named export to use (default: `default`)
+* @returns A lazy route component compatible with TanStack Router
+* @link https://tanstack.com/router/latest/docs/framework/react/api/router/lazyRouteComponentFunction
+*/
+function lazyRouteComponent(importer, exportName) {
+	let loadPromise;
+	let comp;
+	let error;
+	let reload;
+	const load = () => {
+		if (!loadPromise) loadPromise = importer().then((res) => {
+			loadPromise = void 0;
+			comp = res[exportName ?? "default"];
+		}).catch((err) => {
+			error = err;
+			if (isModuleNotFoundError(error)) {
+				if (error instanceof Error && typeof window !== "undefined" && typeof sessionStorage !== "undefined") {
+					const storageKey = `tanstack_router_reload:${error.message}`;
+					if (!sessionStorage.getItem(storageKey)) {
+						sessionStorage.setItem(storageKey, "1");
+						reload = true;
+					}
+				}
+			}
+		});
+		return loadPromise;
+	};
+	const lazyComp = function Lazy(props) {
+		if (reload) {
+			window.location.reload();
+			throw new Promise(() => {});
+		}
+		if (error) throw error;
+		if (!comp) if (reactUse) reactUse(load());
+		else throw load();
+		return import_react.createElement(comp, props);
+	};
+	lazyComp.preload = load;
+	return lazyComp;
+}
 //#endregion
 //#region node_modules/@tanstack/react-router/dist/esm/not-found.js
 function CatchNotFound(props) {
@@ -13896,6 +13982,15 @@ var require_server_node = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 //#endregion
 //#region node_modules/@tanstack/router-core/dist/esm/ssr/handlerCallback.js
+function isSsrResponse(value) {
+	return typeof value === "object" && value !== null && "response" in value && "serverSsrCleanup" in value;
+}
+function normalizeSsrResponse(result) {
+	return isSsrResponse(result) ? result : {
+		response: result,
+		serverSsrCleanup: "none"
+	};
+}
 function createSsrStreamResponse(router, response) {
 	if (!response.body) throw new Error("Invariant failed: SSR stream response requires a body");
 	let disposed = false;
@@ -13910,6 +14005,22 @@ function createSsrStreamResponse(router, response) {
 			} catch {}
 			router.serverSsr?.cleanup();
 		}
+	};
+}
+async function replaceSsrResponse(result, response, reason) {
+	const ssrResponse = normalizeSsrResponse(result);
+	if (ssrResponse.serverSsrCleanup === "stream") await ssrResponse.dispose(reason);
+	return {
+		response,
+		serverSsrCleanup: "none"
+	};
+}
+async function stripSsrResponseBody(result, reason) {
+	const ssrResponse = normalizeSsrResponse(result);
+	if (ssrResponse.serverSsrCleanup === "stream") await ssrResponse.dispose(reason);
+	return {
+		response: new Response(null, ssrResponse.response),
+		serverSsrCleanup: "none"
 	};
 }
 function defineHandlerCallback(handler) {
@@ -14609,4 +14720,4 @@ var renderRouterToStream = async ({ request, router, responseHeaders, children }
 	throw new Error("No renderToReadableStream or renderToPipeableStream found in react-dom/server. Ensure you are using a version of react-dom that supports streaming.");
 };
 //#endregion
-export { RouterProvider as a, createFileRoute as c, useNavigate as d, useRouter as f, HeadContent as i, createRootRouteWithContext as l, defineHandlerCallback as n, createRouter as o, isRedirect as p, Scripts as r, Outlet as s, renderRouterToStream as t, Link as u };
+export { rootRouteId as A, getStylesheetHref as C, isRedirect as D, executeRewriteInput as E, createLRUCache as M, invariant as N, isResolvedRedirect as O, decodePath as P, getScriptPreloadAttrs as S, resolveManifestCssLink as T, useRouter as _, replaceSsrResponse as a, createInlineCssPlaceholderAsset as b, HeadContent as c, Outlet as d, lazyRouteComponent as f, useNavigate as g, Link as h, normalizeSsrResponse as i, isNotFound as j, parseRedirect as k, RouterProvider as l, createRootRouteWithContext as m, defineHandlerCallback as n, stripSsrResponseBody as o, createFileRoute as p, isSsrResponse as r, Scripts as s, renderRouterToStream as t, createRouter as u, GLOBAL_TSR as v, resolveManifestAssetLink as w, createInlineCssStyleAsset as x, TSR_SCRIPT_BARRIER_ID as y };

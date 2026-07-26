@@ -1,4 +1,4 @@
-import { i as __exportAll } from "../__23tanstack-start-server-fn-resolver-Bg9DSdsn.mjs";
+import { r as __exportAll } from "../_runtime.mjs";
 //#region node_modules/canvas-confetti/dist/confetti.module.mjs
 var confetti_module_exports = /* @__PURE__ */ __exportAll({ default: () => confetti_module_default });
 var module = {};

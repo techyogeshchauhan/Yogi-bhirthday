@@ -1,5 +1,5 @@
 globalThis.__nitro_main__ = import.meta.url;
-import { a as NodeResponse, n as defineLazyEventHandler, r as HTTPError, t as H3Core } from "./_libs/h3+rou3+srvx.mjs";
+import { a as NodeResponse, n as HTTPError, r as defineLazyEventHandler, t as H3Core } from "./_libs/h3+rou3+srvx.mjs";
 //#region #nitro-vite-setup
 function lazyService(loader) {
 	let promise, mod;
@@ -11,6 +11,47 @@ function lazyService(loader) {
 }
 var services = { ["ssr"]: lazyService(() => import("./_ssr/ssr.mjs")) };
 globalThis.__nitro_vite_envs__ = services;
+//#endregion
+//#region node_modules/nitro/dist/runtime/internal/route-rules.mjs
+var headers = ((m) => function headersRouteRule(event) {
+	for (const [key, value] of Object.entries(m.options || {})) event.res.headers.set(key, value);
+});
+//#endregion
+//#region #nitro/virtual/routing
+var findRouteRules = /* @__PURE__ */ (() => {
+	const $0 = [{
+		name: "headers",
+		route: "/assets/**",
+		handler: headers,
+		options: { "cache-control": "public, max-age=31536000, immutable" }
+	}];
+	return (m, p) => {
+		let r = [];
+		if (p.charCodeAt(p.length - 1) === 47) p = p.slice(0, -1) || "/";
+		let s = p.split("/");
+		if (s.length > 1) {
+			if (s[1] === "assets") r.unshift({
+				data: $0,
+				params: { "_": s.slice(2).join("/") }
+			});
+		}
+		return r;
+	};
+})();
+var _lazy_wG2Y9c = defineLazyEventHandler(() => import("./_chunks/ssr-renderer.mjs"));
+var findRoute = /* @__PURE__ */ (() => {
+	const data = {
+		route: "/**",
+		handler: _lazy_wG2Y9c
+	};
+	return ((_m, p) => {
+		return {
+			data,
+			params: { "_": p.slice(1) }
+		};
+	});
+})();
+[].filter(Boolean);
 //#endregion
 //#region node_modules/nitro/dist/runtime/internal/error/prod.mjs
 var errorHandler = (error, event) => {
@@ -92,7 +133,7 @@ function createH3App(config) {
 		const pathname = event.url.pathname;
 		const method = event.req.method;
 		const middleware = [];
-		const routeRules = getRouteRules$1(method, pathname);
+		const routeRules = getRouteRules(method, pathname);
 		event.context.routeRules = routeRules?.routeRules;
 		if (routeRules?.routeRuleMiddleware.length) middleware.push(...routeRules.routeRuleMiddleware);
 		if (route?.data?.middleware?.length) middleware.push(...route.data.middleware);
@@ -100,86 +141,6 @@ function createH3App(config) {
 	};
 	return h3App;
 }
-//#endregion
-//#region node_modules/nitro/dist/runtime/internal/app.mjs
-function getRouteRules$1(method, pathname) {
-	const m = findRouteRules(method, pathname);
-	if (!m?.length) return { routeRuleMiddleware: [] };
-	const routeRules = {};
-	for (const layer of m) for (const rule of layer.data) {
-		const currentRule = routeRules[rule.name];
-		if (currentRule) {
-			if (rule.options === false) {
-				delete routeRules[rule.name];
-				continue;
-			}
-			if (typeof currentRule.options === "object" && typeof rule.options === "object") currentRule.options = {
-				...currentRule.options,
-				...rule.options
-			};
-			else currentRule.options = rule.options;
-			currentRule.route = rule.route;
-			currentRule.params = {
-				...currentRule.params,
-				...layer.params
-			};
-		} else if (rule.options !== false) routeRules[rule.name] = {
-			...rule,
-			params: layer.params
-		};
-	}
-	const middleware = [];
-	const orderedRules = Object.values(routeRules).sort((a, b) => (a.handler?.order || 0) - (b.handler?.order || 0));
-	for (const rule of orderedRules) {
-		if (rule.options === false || !rule.handler) continue;
-		middleware.push(rule.handler(rule));
-	}
-	return {
-		routeRules,
-		routeRuleMiddleware: middleware
-	};
-}
-//#endregion
-//#region node_modules/nitro/dist/runtime/internal/route-rules.mjs
-var headers = ((m) => function headersRouteRule(event) {
-	for (const [key, value] of Object.entries(m.options || {})) event.res.headers.set(key, value);
-});
-//#endregion
-//#region #nitro/virtual/routing
-var findRouteRules = /* @__PURE__ */ (() => {
-	const $0 = [{
-		name: "headers",
-		route: "/assets/**",
-		handler: headers,
-		options: { "cache-control": "public, max-age=31536000, immutable" }
-	}];
-	return (m, p) => {
-		let r = [];
-		if (p.charCodeAt(p.length - 1) === 47) p = p.slice(0, -1) || "/";
-		let s = p.split("/");
-		if (s.length > 1) {
-			if (s[1] === "assets") r.unshift({
-				data: $0,
-				params: { "_": s.slice(2).join("/") }
-			});
-		}
-		return r;
-	};
-})();
-var _lazy_wG2Y9c = defineLazyEventHandler(() => import("./_chunks/ssr-renderer.mjs"));
-var findRoute = /* @__PURE__ */ (() => {
-	const data = {
-		route: "/**",
-		handler: _lazy_wG2Y9c
-	};
-	return ((_m, p) => {
-		return {
-			data,
-			params: { "_": p.slice(1) }
-		};
-	});
-})();
-[].filter(Boolean);
 //#endregion
 //#region node_modules/nitro/dist/runtime/internal/app.mjs
 var APP_ID = "default";

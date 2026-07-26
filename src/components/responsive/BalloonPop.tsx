@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { ResponsiveSection } from "./ResponsiveSection";
@@ -53,6 +53,19 @@ export function BalloonPop() {
   const [poppedMessage, setPoppedMessage] = useState<{ id: number; text: string; x: number } | null>(null);
   const [allPopped, setAllPopped] = useState(false);
 
+  // Pre-compute star positions once (avoids Math.random() in JSX render causing SSR crash)
+  const bgStars = useMemo(() =>
+    Array.from({ length: 30 }, () => ({
+      w: Math.random() * 3 + 1,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      opacity: Math.random() * 0.7 + 0.3,
+      dur: 2 + Math.random() * 3,
+      delay: Math.random() * 2,
+    })),
+  []);
+
+
   const popBalloon = useCallback((balloon: Balloon) => {
     if (balloon.popped) return;
 
@@ -96,19 +109,19 @@ export function BalloonPop() {
       <div className="relative w-full overflow-hidden rounded-2xl" style={{ minHeight: 380, background: "linear-gradient(180deg, #0f0c29 0%, #302b63 50%, #24243e 100%)" }}>
 
         {/* Stars in background */}
-        {Array.from({ length: 30 }).map((_, i) => (
+        {bgStars.map((star, i) => (
           <motion.div
             key={i}
             className="absolute rounded-full bg-white"
             style={{
-              width: Math.random() * 3 + 1,
-              height: Math.random() * 3 + 1,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.7 + 0.3,
+              width: star.w,
+              height: star.w,
+              left: `${star.left}%`,
+              top: `${star.top}%`,
+              opacity: star.opacity,
             }}
             animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ repeat: Infinity, duration: 2 + Math.random() * 3, delay: Math.random() * 2 }}
+            transition={{ repeat: Infinity, duration: star.dur, delay: star.delay }}
           />
         ))}
 

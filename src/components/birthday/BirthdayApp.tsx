@@ -71,9 +71,6 @@ function BirthdayAppContent() {
     <>
       <Toaster position="top-center" richColors />
 
-      {/* Background Music Player */}
-      <MusicPlayer />
-      
       {/* Background Effects */}
       <BackgroundEffects />
       
@@ -112,39 +109,12 @@ function BirthdayAppContent() {
       
       {/* Friend Wall */}
       <FriendWall />
-
-      {/* Virtual Toast Wall */}
-      <ToastWall />
-
-      {/* Word Cloud */}
-      <WordCloud />
       
       {/* AI Wish Generator */}
       <AIWishGenerator />
       
       {/* Memory Capsule */}
       <MemoryCapsule />
-
-      {/* Birthday Letter */}
-      <BirthdayLetter />
-
-      {/* Fortune Cookie */}
-      <FortuneCookie />
-
-      {/* Balloon Pop */}
-      <BalloonPop />
-
-      {/* Scratch Card */}
-      <ScratchCard />
-
-      {/* Star Map */}
-      <StarMap />
-
-      {/* Fireworks Launcher */}
-      <FireworksLauncher />
-
-      {/* Personality Quiz */}
-      <PersonalityQuiz />
       
       {/* Poll */}
       <Poll />
@@ -160,9 +130,44 @@ function BirthdayAppContent() {
       
       {/* Social Links */}
       <SocialLinks />
-      
-      {/* Floating Widgets (Desktop only) */}
-      {hydrated && !isMobile && <FloatingWidgets />}
+
+      {/* ── CLIENT-ONLY SECTION (rendered after hydration to avoid SSR crash) ── */}
+      {hydrated && (
+        <>
+          {/* Background Music Player */}
+          <MusicPlayer />
+
+          {/* Virtual Toast Wall */}
+          <ToastWall />
+
+          {/* Word Cloud */}
+          <WordCloud />
+
+          {/* Birthday Letter */}
+          <BirthdayLetter />
+
+          {/* Fortune Cookie */}
+          <FortuneCookie />
+
+          {/* Balloon Pop */}
+          <BalloonPop />
+
+          {/* Scratch Card */}
+          <ScratchCard />
+
+          {/* Star Map */}
+          <StarMap />
+
+          {/* Fireworks Launcher */}
+          <FireworksLauncher />
+
+          {/* Personality Quiz */}
+          <PersonalityQuiz />
+
+          {/* Floating Widgets (Desktop only) */}
+          {!isMobile && <FloatingWidgets />}
+        </>
+      )}
       
       {/* Birthday Reveal Modal */}
       {showReveal && (
