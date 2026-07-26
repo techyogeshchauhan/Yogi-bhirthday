@@ -98,9 +98,6 @@ function BirthdayAppContent() {
       {/* Photo Booth */}
       <PhotoBooth />
       
-      {/* Virtual Gift Box */}
-      <VirtualGiftBox />
-      
       {/* Video Messages */}
       <VideoMessages />
       
